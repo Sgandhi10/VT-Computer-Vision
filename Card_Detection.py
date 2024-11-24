@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-class CardDetection:
+class Card_Detection:
     """
     Method to draw rects around card grouos
     :arg image read as cv2 img
@@ -67,11 +67,26 @@ def merge_rectangles(rects, threshold=10):
         merged_rects.append([x1, y1, x2, y2])
     return merged_rects
 
+def segment_cards(image, rects):
+    cards = []
+    for rect in rects:
+        x1, y1, x2, y2 = rect
+        card = image[y1:y2, x1:x2]
+        cards.append(card)
+    return cards
+
 if __name__ == "__main__":
     # Load the image
     image = cv2.imread('test_images/card_detect2.jpg')
 
     # Call the CardDetection method
-    rects = CardDetection.DectectCards(image)
+    rects = CardDetection.DectectCards(image.copy())
+
+    # Segment the cards
+    seg_cards = segment_cards(image, rects)
+
+    # Export each card as a separate image
+    for i, card in enumerate(seg_cards):
+        cv2.imwrite(f'out/card_{i}.jpg', card)
 
     print(rects)
