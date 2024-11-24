@@ -1,13 +1,12 @@
 import cv2
 import numpy as np
 
-class CardDetection():
-
-    '''
+class CardDetection:
+    """
     Method to draw rects around card grouos
     :arg image read as cv2 img
     :return a list of [TopLeft_x, TopLeft_y, BottomRight_x, Bottom_left_y]
-    '''
+    """
     @staticmethod
     def DectectCards(image):
         # Convert the image to grayscale
@@ -39,8 +38,8 @@ class CardDetection():
             x1, y1, x2, y2 = rect
             cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        # Save image for debugging
-        cv2.imwrite('out/merged_rectangles.jpg', image)
+        # # Save image for debugging
+        # cv2.imwrite('out/merged_rectangles.jpg', image)
 
         return merged_rectangles
 
@@ -68,38 +67,11 @@ def merge_rectangles(rects, threshold=10):
         merged_rects.append([x1, y1, x2, y2])
     return merged_rects
 
-# Load the image
-image = cv2.imread('test_images/card_detect2.jpg')
+if __name__ == "__main__":
+    # Load the image
+    image = cv2.imread('test_images/card_detect2.jpg')
 
-# Convert the image to grayscale
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Call the CardDetection method
+    rects = CardDetection.DectectCards(image)
 
-# Apply thresholding to create a binary image
-_, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
-
-# Find contours
-contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-# Create a list to store rectangles
-rectangles = []
-
-# Minimum size for width and height of the blob
-min_width = 200
-min_height = 200
-
-# Iterate over the contours and add bounding rectangles
-for contour in contours:
-    x, y, w, h = cv2.boundingRect(contour)
-    if w >= min_width or h >= min_height:
-        rectangles.append([x, y, x + w, y + h])
-
-# Merge rectangles that are nearby or overlapping
-merged_rectangles = merge_rectangles(rectangles)
-
-# Draw the merged rectangles
-for rect in merged_rectangles:
-    x1, y1, x2, y2 = rect
-    cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-# Display the result
-cv2.imwrite('out/merged_rectangles.jpg', image)
+    print(rects)
