@@ -80,7 +80,7 @@ if __name__ == "__main__":
     image = cv2.imread('test_images/card_detect2.jpg')
 
     # Call the CardDetection method
-    rects = CardDetection.DectectCards(image.copy())
+    rects = Card_Detection.DectectCards(image.copy())
 
     # Segment the cards
     seg_cards = segment_cards(image, rects)
