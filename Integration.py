@@ -1,7 +1,6 @@
 import Card_Detection as CD
 import Prediction as P
 import Algorithm as A
-import Camera
 
 
 import cv2
@@ -9,35 +8,56 @@ import numpy as np
 
 class Integration:
     def __init__(self):
-        self.camera = Camera.Camera()
         self.card_detection = CD.Card_Detection()
         self.prediction = P.Prediction()
         self.algorithm = A.Algorithm()
 
-    def get_frame(self) -> np.ndarray:
+    def compute(self, img):
         """
-        This function will return the frame from the camera using a generator
-        :return: frame
+        This function will return the card prediction
+        :return: prediction
         """
-        while True:
-            frame = next(self.camera.get_frame())
-            yield frame
+        # Get the card groups
+        card_groups = self.card_detection.DectectCards(img)
+        print(card_groups)
 
-    def release(self):
-        self.camera.release()
-        cv2.destroyAllWindows()
+        # Get the card prediction
+        pred_cards = []
+        for card_group in card_groups:
+            x1, y1, x2, y2 = card_group
+            card = img[y1-100:y2+100, x1-100:x2+100]
+            pred_cards.append(self.prediction.predict(card)[1])
 
-    def run(self):
-        for frame in self.get_frame():
-            cards = self.card_detection.DectectCards(frame)
-            for card in cards:
-                x1, y1, x2, y2 = card
-                card_img = frame[y1:y2, x1:x2]
-                prediction = self.prediction.predict(card_img)
-                if prediction:
-                    self.algorithm.run(prediction)
-            cv2.imshow("frame", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+        print(pred_cards)
+
+        dealer = None
+        players = None
+        for cards in pred_cards:
+            if len(cards) == 1:
+                dealer = cards
+                pred_cards.remove(cards)
+                players = pred_cards
                 break
-        self.release()
-        cv2.destroyAllWindows()
+
+        if dealer is None:
+            print("No dealer found")
+            return None
+
+        print(dealer)
+        print(players)
+
+        # Get the algorithm prediction
+        algorithm_prediction = self.algorithm.action(dealer, players)
+
+        return algorithm_prediction
+
+
+if __name__ == "__main__":
+    # Load the image
+    image = cv2.imread('test_images/card_detect.jpg')
+
+    # Call the Integration method
+    integration = Integration()
+    prediction = integration.compute(image)
+
+    print(prediction)

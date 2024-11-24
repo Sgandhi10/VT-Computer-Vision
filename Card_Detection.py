@@ -1,12 +1,46 @@
 import cv2
 import numpy as np
 
+
+def merge_rectangles(rects, threshold=10):
+    merged_rects = []
+    while rects:
+        rect = rects.pop(0)
+        x1, y1, x2, y2 = rect
+        index = 0
+        while index < len(rects):
+            nx1, ny1, nx2, ny2 = rects[index]
+            # Check if rectangles are close or overlapping
+            if (x1 - threshold < nx2 and x2 + threshold > nx1 and
+                    y1 - threshold < ny2 and y2 + threshold > ny1):
+                # Merge the rectangles
+                x1 = min(x1, nx1)
+                y1 = min(y1, ny1)
+                x2 = max(x2, nx2)
+                y2 = max(y2, ny2)
+                rects.pop(index)
+            else:
+                index += 1
+        merged_rects.append([x1, y1, x2, y2])
+    return merged_rects
+
+
+def segment_cards(image, rects):
+    cards = []
+    for rect in rects:
+        x1, y1, x2, y2 = rect
+        card = image[y1-100:y2+100, x1-100:x2+100]
+        cards.append(card)
+    return cards
+
+
 class Card_Detection:
     """
     Method to draw rects around card grouos
     :arg image read as cv2 img
     :return a list of [TopLeft_x, TopLeft_y, BottomRight_x, Bottom_left_y]
     """
+
     @staticmethod
     def DectectCards(image):
         # Convert the image to grayscale
@@ -44,40 +78,9 @@ class Card_Detection:
         return merged_rectangles
 
 
-# Merge overlapping or nearby rectangles
-def merge_rectangles(rects, threshold=10):
-    merged_rects = []
-    while rects:
-        rect = rects.pop(0)
-        x1, y1, x2, y2 = rect
-        index = 0
-        while index < len(rects):
-            nx1, ny1, nx2, ny2 = rects[index]
-            # Check if rectangles are close or overlapping
-            if (x1 - threshold < nx2 and x2 + threshold > nx1 and
-                y1 - threshold < ny2 and y2 + threshold > ny1):
-                # Merge the rectangles
-                x1 = min(x1, nx1)
-                y1 = min(y1, ny1)
-                x2 = max(x2, nx2)
-                y2 = max(y2, ny2)
-                rects.pop(index)
-            else:
-                index += 1
-        merged_rects.append([x1, y1, x2, y2])
-    return merged_rects
-
-def segment_cards(image, rects):
-    cards = []
-    for rect in rects:
-        x1, y1, x2, y2 = rect
-        card = image[y1:y2, x1:x2]
-        cards.append(card)
-    return cards
-
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread('test_images/card_detect2.jpg')
+    image = cv2.imread('test_images/card_detect.jpg', cv2.IMREAD_COLOR)
 
     # Call the CardDetection method
     rects = Card_Detection.DectectCards(image.copy())

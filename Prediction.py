@@ -21,11 +21,8 @@ class Prediction:
         This function will return the predictions for the image
         :return: predictions
         """
-        # Read the image
-        image = cv2.imread(img)
-
         # Pass the image through the detection model and get the result
-        detect_result = self.model(image)
+        detect_result = self.model(img)
 
         matches = set()
 
@@ -43,13 +40,12 @@ class Prediction:
                 class_name = self.model.names[class_id]
                 matches.add(class_name)
 
-                print("Class:", class_name)
-                print("Confidence:", confidence)
-                print("Bounding box:", x1, y1, x2, y2)
+                # print("Class:", class_name)
+                # print("Confidence:", confidence)
+                # print("Bounding box:", x1, y1, x2, y2)
 
         # Plot the detections
         detect_image = detect_result[0].plot()
-        print(detect_result)
 
         # Convert the image to RGB format
         detect_image = cv2.cvtColor(detect_image, cv2.COLOR_BGR2RGB)
@@ -60,9 +56,11 @@ class Prediction:
 
 if __name__ == "__main__":
     prediction = Prediction()
-    pred, match = prediction.predict("test_images/card_detect1.jpg")
+    img = cv2.imread("out/card_0.jpg", cv2.IMREAD_COLOR)
+    pred, match = prediction.predict(img)
     cv2.imwrite("out/predictions1.jpg", pred)
     print(match)
-    pred, match = prediction.predict("test_images/card_detect2.jpg")
+    img = cv2.imread("out/card_1.jpg", cv2.IMREAD_COLOR)
+    pred, match = prediction.predict(img)
     cv2.imwrite("out/predictions2.jpg", pred)
     print(match)
