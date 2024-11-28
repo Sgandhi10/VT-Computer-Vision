@@ -10,7 +10,7 @@ class Integration:
     def __init__(self):
         self.card_detection = CD.Card_Detection()
         self.prediction = P.Prediction()
-        self.algorithm = A.Algorithm()
+        #self.algorithm = A.Algorithm()
 
     def compute(self, img):
         """
