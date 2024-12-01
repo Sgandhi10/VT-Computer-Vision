@@ -97,7 +97,7 @@ class Algorithm:
         """
         self.Shoe.remove_card(shown_card)
 
-    def action(self, dealer_card: CardRank, player_cards: list[CardRank]) -> dict[Action, float]:
+    def action(self, dealer_card: CardRank, player_cards: list[CardRank]) -> int:
         """Determines the expected value of each player action given a blackjack state.  Each EV
         is returned in a dictionary with Action keys (i.e. hit, stand, and double).
 
@@ -136,11 +136,20 @@ class Algorithm:
         double_expected_result = self.expected_value_hit(self.shoe.rank_counts, dealer_total, player_total, True,
                                                          player_soft_total, dealer_soft_total, dealer_can_blackjack)
 
-        return {
-            Action.HIT: hit_expected_result,
-            Action.STAND: stand_expected_result,
-            Action.DOUBLE: double_expected_result,
-        }
+        highest_ev = max(hit_expected_result, stand_expected_result, double_expected_result)
+
+        if highest_ev == stand_expected_result:
+            return Action.STAND.value
+        elif highest_ev == hit_expected_result:
+            return Action.HIT.value
+        elif highest_ev == double_expected_result:
+            return Action.DOUBLE.value
+
+        # return {
+        #     Action.HIT: hit_expected_result,
+        #     Action.STAND: stand_expected_result,
+        #     Action.DOUBLE: double_expected_result,
+        # }
 
     def expected_value_hit(self, shoe_state: dict[CardRank, int],
                            dealer_total: int, player_total: int,

@@ -1,7 +1,7 @@
 import Card_Detection as CD
 import Prediction as P
 import Algorithm as A
-
+import re
 
 import cv2
 import numpy as np
@@ -10,7 +10,7 @@ class Integration:
     def __init__(self):
         self.card_detection = CD.Card_Detection()
         self.prediction = P.Prediction()
-        #self.algorithm = A.Algorithm()
+        self.algorithm = A.Algorithm()
 
     def compute(self, img):
         """
@@ -46,10 +46,22 @@ class Integration:
         print(dealer)
         print(players)
 
-        # Get the algorithm prediction
-        algorithm_prediction = self.algorithm.action(dealer, players)
+        # Convert list of string card values to card Enum Values
+        Dealer_Card = dealer[0]
+        Dealer_Card = Dealer_Card.replace("c","").replace("s", "").replace("h","").heart("d","")
+        Dealer_Card = A.CardRank(Dealer_Card)
 
-        return algorithm_prediction
+        # list of actions from algo
+        action_list = []
+        for player in players:  # Iterates through all players
+            player_cards =[] # cards for player
+            for card in player:
+                card = card.replace("c","").replace("s", "").replace("h","").heart("d","")
+                player_cards = player_cards + A.CardRank(card)
+            action_list = action_list + self.algorithm.action(Dealer_Card, player_cards)
+
+
+        return action_list
 
 
 if __name__ == "__main__":
