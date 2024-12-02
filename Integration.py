@@ -45,20 +45,21 @@ class Integration:
 
         print(dealer)
         print(players)
-
+        dealer = list(dealer)
         # Convert list of string card values to card Enum Values
         Dealer_Card = dealer[0]
-        Dealer_Card = Dealer_Card.replace("c","").replace("s", "").replace("h","").heart("d","")
+        Dealer_Card = Dealer_Card.replace("c","").replace("s", "").replace("h","").replace("d","")
         Dealer_Card = A.CardRank(Dealer_Card)
 
         # list of actions from algo
         action_list = []
         for player in players:  # Iterates through all players
-            player_cards =[] # cards for player
+            player_cards = [] # cards for player
             for card in player:
-                card = card.replace("c","").replace("s", "").replace("h","").heart("d","")
-                player_cards = player_cards + A.CardRank(card)
-            action_list = action_list + self.algorithm.action(Dealer_Card, player_cards)
+                card = card.replace("c","").replace("s", "").replace("h","").replace("d","")
+                card_rank_enum = A.CardRank(card)
+                player_cards.append(card_rank_enum)
+            action_list.append(self.algorithm.action(Dealer_Card, player_cards))
 
 
         return action_list
