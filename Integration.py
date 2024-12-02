@@ -64,13 +64,53 @@ class Integration:
 
         return action_list
 
+    def blackjack_game(self):
+        Game = True
+        while Game:
+            Hand = True
+            while Hand:
+                # Load the image
+                image = cv2.imread('test_images/card_detect.jpg')
+
+                # Call the Integration method
+                integration = Integration()
+                prediction = integration.compute(image)
+                print(prediction)
+
+                Input = input("Y to continue, Done for standing")
+                if Input == "Done":
+                    Game = False
+
+            Condi = True
+            while Condi:
+                Input = input("Has hand been resolve? Y/n")
+                if Input == "Y":
+                    Condi = False
+
+            # Game is concluded - get final image from table
+            image_table = cv2.imread('test_images/final_table.jpg')
+
+            card_groups = self.card_detection.DectectCards(image_table)
+            print(card_groups)
+
+            # Get the card prediction
+            pred_cards = []
+            for card_group in card_groups:
+                x1, y1, x2, y2 = card_group
+                card = image_table[y1 - 100:y2 + 100, x1 - 100:x2 + 100]
+                pred_cards.append(self.prediction.predict(card)[1])
+
+            for card_group in pred_cards:  # Iterate through all card groups in image
+                for card in card_group:  # iterate through all the cards
+                    card = card.replace("c", "").replace("s", "").replace("h", "").replace("d", "")
+                    card_rank_enum = A.CardRank(card)
+                    self.algorithm.remove_card_from_shoe(card_rank_enum)
+            Input = input("Game over? Y/n")
+            if (Input == Y):
+                Game = False
+        
+
 
 if __name__ == "__main__":
-    # Load the image
-    image = cv2.imread('test_images/card_detect.jpg')
+    Integration.blackjack_game(Integration)
 
-    # Call the Integration method
-    integration = Integration()
-    prediction = integration.compute(image)
-
-    print(prediction)

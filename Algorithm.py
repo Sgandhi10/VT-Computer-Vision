@@ -88,6 +88,7 @@ class Algorithm:
     def __init__(self, num_decks: int = 6):
         self.shoe = self.Shoe(num_decks)
 
+
     def remove_card_from_shoe(self, shown_card: CardRank) -> None:
         """Removes a card from the shoe. 
 
