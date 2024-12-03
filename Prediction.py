@@ -12,7 +12,7 @@ class Prediction:
             print("No GPU available. Training will run on CPU.")
 
         # Load the model
-        self.model = YOLO('yolov8n_custom_final.pt')
+        self.model = YOLO('best.pt')
 
 
 
