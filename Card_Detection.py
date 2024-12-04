@@ -45,12 +45,15 @@ class Card_Detection:
     def DectectCards(image):
         # Convert the image to grayscale
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # cv2.imwrite('out/gray.jpg', gray)
 
         # Apply thresholding to create a binary image
         _, binary = cv2.threshold(gray, 190, 255, cv2.THRESH_BINARY)
 
         # Find contours
         contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        cv2.imwrite('out/binary.jpg', binary)
 
         # Create a list to store rectangles
         rectangles = []
@@ -70,7 +73,7 @@ class Card_Detection:
         # Draw the merged rectangles
         for rect in merged_rectangles:
             x1, y1, x2, y2 = rect
-            # cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            # cv2.rectangle(image, (x1, y1), (x2, y2), (0, 255, 0), 15)
 
         # # Save image for debugging
         # cv2.imwrite('out/merged_rectangles.jpg', image)
@@ -80,7 +83,7 @@ class Card_Detection:
 
 if __name__ == "__main__":
     # Load the image
-    image = cv2.imread('test_images/Card_Detection/Input/IMG_8876.jpg', cv2.IMREAD_COLOR)
+    image = cv2.imread('test_images/Card_Detection/Input/IMG_8935.jpg', cv2.IMREAD_COLOR)
 
     # Call the CardDetection method
     rects = Card_Detection.DectectCards(image.copy())

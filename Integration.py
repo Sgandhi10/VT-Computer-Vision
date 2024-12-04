@@ -25,7 +25,12 @@ class Integration:
         pred_cards = []
         for card_group in card_groups:
             x1, y1, x2, y2 = card_group
-            card = img[y1-100:y2+100, x1-100:x2+100]
+            b_box = 200
+            x1 = max(0, x1 - b_box)
+            y1 = max(0, y1 - b_box)
+            y2 = min(y2 + b_box, image.shape[0])
+            x2 = min(x2 + b_box, image.shape[1])
+            card = image[y1:y2, x1:x2]
             pred_cards.append(self.prediction.predict(card)[1])
 
         print(pred_cards)
@@ -68,10 +73,10 @@ class Integration:
         # Action List: 0 -> Stand, 1 -> Hit, 2 -> Double Down
         for i in range(len(player_Coords)):
             x1, y1, x2, y2 = player_Coords[i]
-            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 15)
             # Convert action to string for display based on the action list
             out = "Stand" if action_list[i] == 0 else "Hit" if action_list[i] == 1 else "Double Down"
-            cv2.putText(img, out, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+            cv2.putText(img, out, (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 255, 0), 10, cv2.LINE_AA)
         cv2.imwrite("out/predictions.jpg", img)
 
         return action_list
@@ -109,7 +114,12 @@ class Integration:
             pred_cards = []
             for card_group in card_groups:
                 x1, y1, x2, y2 = card_group
-                card = image_table[y1 - 100:y2 + 100, x1 - 100:x2 + 100]
+                b_box = 200
+                x1 = max(0, x1 - b_box)
+                y1 = max(0, y1 - b_box)
+                y2 = min(y2 + b_box, image_table.shape[0])
+                x2 = min(x2 + b_box, image_table.shape[1])
+                card = image_table[y1:y2, x1:x2]
                 pred_cards.append(self.prediction.predict(card)[1])
 
             for card_group in pred_cards:  # Iterate through all card groups in image
@@ -124,5 +134,11 @@ class Integration:
 
 
 if __name__ == "__main__":
-    Integration.blackjack_game(Integration)
+    integration = Integration()
+    # Load the image
+    image = cv2.imread('test_images/Card_Detection/Input/IMG_8935.jpg', cv2.IMREAD_COLOR)
+
+    # Call the Integration method
+    integration.compute(image)
+    # Integration.blackjack_game(Integration)
 

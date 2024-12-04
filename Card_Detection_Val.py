@@ -32,8 +32,8 @@ for img in os.listdir('test_images/Card_Detection/Input'):
         pred_cards.append(pd.predict(card)[1])
 
         # Draw bounding box around every card group and state card prediction for group
-        cv2.rectangle(image_out, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(image_out, str(pred_cards[-1]), (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 5, (0, 255, 0), 5)
+        cv2.rectangle(image_out, (x1, y1), (x2, y2), (0, 255, 0), 15)
+        cv2.putText(image_out, str(pred_cards[-1]), (x1, y1+170), cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 255, 0), 15)
     cv2.imwrite("test_images/Card_Detection/Output/" + img, image_out)
     print(pred_cards)
     print("Image saved as test_images/Card_Detection/Output/" + img)
