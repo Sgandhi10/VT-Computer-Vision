@@ -3,6 +3,7 @@ Description: Algorithm handles probability and expected value calculations while
 the action that maximizes expected value
 '''
 from enum import Enum
+from concurrent.futures import ThreadPoolExecutor
 
 
 class CardRank(Enum):
@@ -61,18 +62,18 @@ class Algorithm:
         num_decks -- the number of 52-card decks that are combined to form this shoe
         rank_counts -- a mapping of card rank to the amount of that card rank present in this shoe
         """
-        
+
         def __init__(self, num_decks):
             self.num_decks = num_decks
             self.rank_counts: dict[CardRank, int] = dict()
             self.initialize_shoe()
-        
+
         def initialize_shoe(self) -> None:
             """Resets this shoe.  Upon initialization of this shoe, each rank appears 4 times for
             each deck.
             """
-            self.rank_counts = {rank: self.num_decks * 4 for rank in [cr.value for cr in CardRank]}
-        
+            self.rank_counts = {rank: self.num_decks * 4 for rank in CardRank}
+
         def remove_card(self, rank: CardRank) -> None:
             """Removes a card from this shoe.
             
@@ -80,14 +81,14 @@ class Algorithm:
             
             ValueError -- if this shoe does not contain the specified rank
             """
+
             if self.rank_counts[rank] == 0:
                 raise ValueError(f"{rank} already has zero cards in shoe")
-            
+
             self.rank_counts[rank] -= 1
 
     def __init__(self, num_decks: int = 6):
         self.shoe = self.Shoe(num_decks)
-
 
     def remove_card_from_shoe(self, shown_card: CardRank) -> None:
         """Removes a card from the shoe. 
@@ -96,7 +97,10 @@ class Algorithm:
 
         ValueError -- if this shoe does not contain the specified rank
         """
-        self.Shoe.remove_card(shown_card)
+        self.shoe.remove_card(rank=shown_card)
+
+    def print_show(self):
+        print(self.shoe.rank_counts)
 
     def action(self, dealer_card: CardRank, player_cards: list[CardRank]) -> int:
         """Determines the expected value of each player action given a blackjack state.  Each EV
@@ -110,6 +114,7 @@ class Algorithm:
         # manages soft totals, where aces can change from 11 to 1 within a total
         player_soft_total = False
         dealer_soft_total = False
+
 
         # calculate player total
         player_total = 0
@@ -130,12 +135,30 @@ class Algorithm:
             dealer_soft_total = True
 
         # EV: 0 = push, 1 = win, -1 = loss, 2 = double win, -2 = double loss
-        hit_expected_result = self.expected_value_hit(self.shoe.rank_counts, dealer_total, player_total, False,
-                                                      player_soft_total, dealer_soft_total, dealer_can_blackjack)
-        stand_expected_result = self.expected_value_stand(self.shoe.rank_counts, dealer_total, player_total, False,
-                                                          dealer_soft_total, dealer_can_blackjack)
-        double_expected_result = self.expected_value_hit(self.shoe.rank_counts, dealer_total, player_total, True,
-                                                         player_soft_total, dealer_soft_total, dealer_can_blackjack)
+        with ThreadPoolExecutor() as executor:
+            # Define tasks for the thread pool
+            futures = {
+                'hit': executor.submit(
+                    self.expected_value_hit,
+                    self.shoe.rank_counts, dealer_total, player_total, False,
+                    player_soft_total, dealer_soft_total, dealer_can_blackjack
+                ),
+                'stand': executor.submit(
+                    self.expected_value_stand,
+                    self.shoe.rank_counts, dealer_total, player_total, False,
+                    dealer_soft_total, dealer_can_blackjack
+                ),
+                'double': executor.submit(
+                    self.expected_value_hit,
+                    self.shoe.rank_counts, dealer_total, player_total, True,
+                    player_soft_total, dealer_soft_total, dealer_can_blackjack
+                ),
+            }
+
+            # Retrieve results from the futures
+            hit_expected_result = futures['hit'].result()
+            stand_expected_result = futures['stand'].result()
+            double_expected_result = futures['double'].result()
 
         highest_ev = max(hit_expected_result, stand_expected_result, double_expected_result)
 
@@ -207,8 +230,10 @@ class Algorithm:
                 if new_player_total > 21:  # automatic loss
                     expected_value += -1 * bet_absolute_value * fraction_of_all_outcomes
                 elif new_player_total == 21 or is_doubled:  # automatic stand
-                    expected_value += self.expected_value_stand(new_shoe_state, dealer_total, new_player_total, is_doubled,
-                                                                dealer_soft_total, dealer_can_blackjack) * fraction_of_all_outcomes
+                    expected_value += self.expected_value_stand(new_shoe_state, dealer_total, new_player_total,
+                                                                is_doubled,
+                                                                dealer_soft_total,
+                                                                dealer_can_blackjack) * fraction_of_all_outcomes
                 else:  # chooses the optimal play post-hit, as that will give us the optimal play here
                     ev_when_hit = self.expected_value_hit(new_shoe_state, dealer_total, new_player_total, False,
                                                           player_soft_total, dealer_soft_total, dealer_can_blackjack)
@@ -255,19 +280,19 @@ class Algorithm:
                 # establish a new dealer total after this dealer hit
                 shown_rank_value = CardRank(shown_rank).worth()
                 new_dealer_total = dealer_total + shown_rank_value
-                
+
                 # if next card is an ace...
                 if shown_rank == "A":
                     if new_dealer_total > 21:  # ...and the 11 puts the dealer over 21...
                         new_dealer_total -= 10  # ...the ace becomes a 1
                     else:  # ...and the 11 keeps the dealer under or at 21...
                         dealer_soft_total = True  # ...then the 11 can still become a 1
-            
+
                 # adjusts new_dealer_total if it goes over 21 with a soft total
                 if new_dealer_total > 21 and dealer_soft_total:
                     new_dealer_total -= 10  # ace becomes a 1
                     dealer_soft_total = False  # this can never be true again
-                
+
                 if new_dealer_total > 21:  # automatic win
                     expected_value += bet_absolute_value * fraction_of_all_outcomes
                 elif new_dealer_total == 21 and dealer_can_blackjack:  # dealer hits blackjack
@@ -282,9 +307,10 @@ class Algorithm:
                 elif new_dealer_total >= 17 and new_dealer_total == player_total:  # automatic push
                     expected_value += 0
                 else:  # the dealer has to keep going, but the next card could be any remaining in the shoe
-                    expected_value += self.expected_value_stand(new_shoe_state, new_dealer_total, player_total, is_doubled,
+                    expected_value += self.expected_value_stand(new_shoe_state, new_dealer_total, player_total,
+                                                                is_doubled,
                                                                 dealer_soft_total, False) * fraction_of_all_outcomes
-        
+
         return expected_value
 
 

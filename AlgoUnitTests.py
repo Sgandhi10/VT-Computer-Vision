@@ -6,7 +6,7 @@ import random
 
 class virtual_deck:
     def __init__(self):
-        self.deck_list=['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']*4
+        self.deck_list=['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']*4*8
         random.shuffle(self.deck_list)  # Shuffle the deck when it's created
         self.Alori = Algorithm()
 
@@ -20,14 +20,12 @@ class virtual_deck:
     def deck_total(self):
         return len(self.deck_list)
 
-
-class TestAlgorithm(unittest.TestCase):
-    #TODO write more tests for algo to see if they follow basic strategy
-    def test_bruh(self):
+def test_bruh():
         player_total = 0
-        algo = Algorithm(1)
+        hands_played = 0
+        algo = Algorithm(8)
         deck = virtual_deck()
-        while (deck.deck_total() > 7):
+        while (deck.deck_total() > 100):
             dealer_cards = []
             dealer_cards.append(deck.draw_card())
             player_cards = []
@@ -56,16 +54,35 @@ class TestAlgorithm(unittest.TestCase):
                         break
                 deal_number = sum(card.worth() for card in dealer_cards)
                 player_number = sum(card.worth() for card in player_cards)
-                if  deal_number> 21:
+                if  deal_number > 21:
                     player_total += 1*doubled
                 elif deal_number == player_number:
                     continue
                 elif player_number>deal_number:
-                    player_total -= 1*doubled
+                    player_total += 1*doubled
                 elif deal_number>player_number:
                     player_total -=1*doubled
-
+            hands_played +=1
+            for card in player_cards:
+                algo.remove_card_from_shoe(card)
+            for card in dealer_cards:
+                algo.remove_card_from_shoe(card)
+        algo.print_show()
         print("Player value left: "+str(player_total))
+        return player_total, hands_played
+
+class TestAlgorithm(unittest.TestCase):
+    #TODO write more tests for algo to see if they follow basic strategy
+    def test_getEV_Algo(self):
+        ev = []
+        hands_played = 0
+        for i in range(30):
+            bets_change, hands = test_bruh()
+            ev.append(bets_change)
+            hands_played = hands_played + hands
+        print("Total bets change: " + str(sum(ev)))
+        print("Total of hands played: " + str(hands_played))
+
 
 if __name__ == '__main__':
     unittest.main()
